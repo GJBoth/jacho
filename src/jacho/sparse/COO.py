@@ -3,6 +3,7 @@ from jax import random
 import jax
 from typing import Union, Callable, Sequence, NamedTuple
 from functools import partial
+from jax.tree_util import register_pytree_node
 
 
 class COO(NamedTuple):
@@ -12,6 +13,17 @@ class COO(NamedTuple):
     cols: jnp.ndarray
     vals: jnp.ndarray
     shape: Sequence[int]
+
+
+def _coo_flatten(A):
+    return A[:3], A[3]
+
+
+def _coo_unflatten(aux_data, children):
+    return COO(*children, aux_data)
+
+
+register_pytree_node(COO, _coo_flatten, _coo_unflatten)
 
 
 def coo_matrix(
