@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "jacho"
+version = "0.1.0"
+description = "Jax-based reservoir computing"
+authors = ["Gert-Jan <gert-jan.both@cri-paris.org>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+jax = "^0.2.13"
+numpy = "^1.20.3"
+flax = "^0.3.4"
+# This link needs to manually updated for now with right jaxlib, cuda annd python version
+jaxlib = {url = "https://storage.googleapis.com/jax-releases/cuda110/jaxlib-0.1.67+cuda110-cp38-none-manylinux2010_x86_64.whl"}
+
+[tool.poetry.dev-dependencies]
+black = "^21.5b2"
+flake8 = "^3.9.2"
+mypy = "^0.812"
+jupyterlab = "^3.0.16"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
