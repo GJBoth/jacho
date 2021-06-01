@@ -8,7 +8,7 @@ from jax import random
 
 
 class SparseReservoir(nn.Module):
-    """Implements a generic reservoir."""
+    """Implements a sparse reservoir."""
 
     n_reservoir: int
     nnz: float = 0.1
@@ -21,10 +21,22 @@ class SparseReservoir(nn.Module):
 
     @nn.compact
     def __call__(self, state, x):
-        z_res = Sparse(self.n_reservoir, self.nnz, use_bias=True)(state)
-        z_input = Sparse(self.n_reservoir, self.nnz, use_bias=False)(x)
+        z_res = Sparse(
+            self.n_reservoir,
+            self.nnz,
+            use_bias=True,
+            kernel_init=normal(self.res_scale),
+            bias_init=normal(self.bias_scale),
+        )
+
+        z_input = Sparse(
+            self.n_reservoir,
+            self.nnz,
+            use_bias=False,
+            kernel_init=normal(self.input_scale),
+        )
         updated_state = self.activation_fn(
-            z_input + z_res, state, *self.activation_fn_args
+            z_input(x) + z_res(state), state, *self.activation_fn_args
         )
 
         return updated_state
@@ -38,9 +50,9 @@ class Sparse(nn.Module):
     n_features: int
     nnz: float
 
-    kernel_init: Callable = random.normal
+    kernel_init: Callable = normal()
     use_bias: bool = True
-    bias_init: Callable = random.normal
+    bias_init: Callable = normal()
 
     @nn.compact
     def __call__(self, inputs):
