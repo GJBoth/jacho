@@ -21,8 +21,8 @@ class SparseReservoir(nn.Module):
 
     @nn.compact
     def __call__(self, state, x):
-        z_res = Sparse(self.n_reservoir, self.nnz)(state)
-        z_input = Sparse(self.n_reservoir, self.nnz)(x)
+        z_res = Sparse(self.n_reservoir, self.nnz, use_bias=True)(state)
+        z_input = Sparse(self.n_reservoir, self.nnz, use_bias=False)(x)
         updated_state = self.activation_fn(
             z_input + z_res, state, *self.activation_fn_args
         )
@@ -32,6 +32,34 @@ class SparseReservoir(nn.Module):
     @staticmethod
     def initialize_state(rng, n_reservoir, init_fn=zeros):
         return init_fn(rng, (1, n_reservoir))
+
+
+class Sparse(nn.Module):
+    n_features: int
+    nnz: float
+
+    kernel_init: Callable = random.normal
+    use_bias: bool = True
+    bias_init: Callable = random.normal
+
+    @nn.compact
+    def __call__(self, inputs):
+        dense_shape = (self.n_features, inputs.shape[-1])
+        kernel = self.param(
+            "kernel",
+            sparse_coo_init(self.kernel_init, self.nnz),
+            dense_shape,
+        )
+        # we need to transpose twice for correct shapes.
+        z = sparse_ops.coo_matmat(*kernel, inputs.T, shape=dense_shape).T
+        if self.use_bias:
+            bias = self.param(
+                "bias",
+                self.bias_init,
+                (self.n_features,),
+            )
+            z += bias
+        return z
 
 
 def sparse_coo_init(rng, nnz):
@@ -46,28 +74,3 @@ def sparse_coo_init(rng, nnz):
         return vals, rows, cols
 
     return _init
-
-
-class Sparse(nn.Module):
-    n_features: int
-    nnz: float
-
-    kernel_init: Callable = random.normal
-    bias_init: Callable = random.normal
-
-    @nn.compact
-    def __call__(self, inputs):
-        dense_shape = (self.n_features, inputs.shape[-1])
-        kernel = self.param(
-            "kernel",
-            sparse_coo_init(self.kernel_init, self.nnz),
-            dense_shape,
-        )
-        bias = self.param(
-            "bias",
-            self.bias_init,
-            (self.n_features,),
-        )
-        # we need to transpose twice for correct shapes.
-        z = sparse_ops.coo_matmat(*kernel, inputs.T, shape=dense_shape).T + bias
-        return z
