@@ -7,11 +7,9 @@ from flax.core import freeze, unfreeze
 def ridge(model, params, state, u_train, renorm_factor=1.0, alpha=1e-2):
     # Running reservoir and constructing feature matrix
     updated_state, intermediate = model.apply(
-        params, state, u_train, method=model.run_reservoir
+        params, state, u_train[:-1], method=model.run_reservoir
     )
-    X = jnp.concatenate(
-        [intermediate[:-1], renorm_factor * u_train[:-1]], axis=-1
-    ).squeeze()
+    X = jnp.concatenate([intermediate, renorm_factor * u_train[1:]], axis=-1).squeeze()
     y = u_train[1:].squeeze()
 
     # Solving for output kernel
@@ -26,4 +24,3 @@ def ridge(model, params, state, u_train, renorm_factor=1.0, alpha=1e-2):
     params = freeze(params)
 
     return updated_state, params
-

@@ -35,7 +35,7 @@ class GenericEchoState(nn.Module):
 
         # Calculating output layer
         prediction = self.output_layer(updated_state, previous_prediction)
-        return (updated_state, prediction), prediction
+        return (updated_state, prediction), (prediction, updated_state)
 
     @scan
     def run_reservoir(self, state, inputs):
@@ -47,4 +47,3 @@ class GenericEchoState(nn.Module):
 
     def initialize_state(self, rng, n_reservoir, init_fn=zeros):
         return self.reservoir_type.initialize_state(rng, n_reservoir, init_fn)
-
