@@ -30,7 +30,7 @@ class StructuredTransform(nn.Module):
             X = hadamard(Diagonal()(X))
 
         bias = self.param("bias", normal(stddev=self.bias_scale), (self.n_reservoir,))
-        # TODO: check if self.n_hadamard is correct; comes from code from paper
+        ## TODO: check if self.n_hadamard is correct; comes from code from paper
         X = X[:, : self.n_reservoir] / X.shape[-1] + bias
         X = self.activation_fn(X, state, *self.activation_fn_args)
         return X
@@ -79,7 +79,7 @@ class Diagonal(nn.Module):
         return D * X
 
 
-def hadamard(normalized=True, dtype=jnp.float32):
+def hadamard(normalized=False, dtype=jnp.float32):
     """We need the numpy to use it as initializer"""
 
     def init(key, shape, dtype=dtype):
@@ -105,9 +105,10 @@ def hadamard(normalized=True, dtype=jnp.float32):
 
 class HadamardTransform(nn.Module):
     n_hadamard: int
+    normalized: bool = False
 
     def setup(self):
-        self.H = hadamard()(None, (self.n_hadamard,))
+        self.H = hadamard(self.normalized)(None, (self.n_hadamard,))
 
     def __call__(self, X):
         return jnp.dot(X, self.H)
@@ -125,6 +126,8 @@ class Log2Padding(nn.Module):
 
 
 class FastHadamardTransform(nn.Module):
+    normalized: bool = False
+
     @nn.compact
     def __call__(self, X):
         def update(z, m):
@@ -134,5 +137,7 @@ class FastHadamardTransform(nn.Module):
 
         m_max = np.log2(X.shape[-1])
         X = jnp.expand_dims(X, -1)
-        X = reduce(update, np.arange(m_max), X)
-        return X.squeeze(-2) / 2 ** (m_max / 2)
+        X = reduce(update, np.arange(m_max), X).squeeze(-2)
+        if self.normalized:
+            X /= 2 ** (m_max / 2)
+        return X
