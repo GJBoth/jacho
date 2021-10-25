@@ -3,7 +3,7 @@ from flax import linen as nn
 from flax.linen.initializers import normal, zeros
 from ..activation import leaky_erf
 import jax.numpy as jnp
-from jax.experimental import sparse_ops
+from jax.experimental import sparse
 from jax import random
 
 
