@@ -41,10 +41,6 @@ class SparseReservoir(nn.Module):
 
         return updated_state
 
-    @staticmethod
-    def initialize_state(rng, n_reservoir, init_fn=zeros):
-        return init_fn(rng, (1, n_reservoir))
-
 
 class Sparse(nn.Module):
     n_features: int
@@ -63,7 +59,7 @@ class Sparse(nn.Module):
             dense_shape,
         )
         # we need to transpose twice for correct shapes.
-        z = sparse_ops.coo_matmat(*kernel, inputs.T, shape=dense_shape).T
+        z = sparse.coo_matmat(*kernel, inputs.T, shape=dense_shape).T
         if self.use_bias:
             bias = self.param(
                 "bias",

@@ -1,6 +1,6 @@
 from typing import Callable, Tuple
 from flax import linen as nn
-from flax.linen.initializers import normal, zeros
+from flax.linen.initializers import normal
 from ..activation import leaky_erf
 import jax.numpy as jnp
 import numpy as np
@@ -35,10 +35,6 @@ class StructuredTransform(nn.Module):
         X = self.activation_fn(X, state, *self.activation_fn_args)
         return X
 
-    @staticmethod
-    def initialize_state(rng, n_reservoir, init_fn=zeros):
-        return init_fn(rng, (1, n_reservoir))
-
 
 class FastStructuredTransform(nn.Module):
     n_reservoir: int
@@ -65,10 +61,6 @@ class FastStructuredTransform(nn.Module):
         X = X[:, : self.n_reservoir] / X.shape[-1] + bias
         X = self.activation_fn(X, state, *self.activation_fn_args)
         return X
-
-    @staticmethod
-    def initialize_state(rng, n_reservoir, init_fn=zeros):
-        return init_fn(rng, (1, n_reservoir))
 
 
 ############################### Hadamard transforms ###########################################

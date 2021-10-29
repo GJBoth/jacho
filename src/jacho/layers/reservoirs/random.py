@@ -31,7 +31,3 @@ class RandomReservoir(nn.Module):
         )
 
         return updated_state
-
-    @staticmethod
-    def initialize_state(rng, n_reservoir, init_fn=zeros):
-        return init_fn(rng, (1, n_reservoir))

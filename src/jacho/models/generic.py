@@ -3,6 +3,7 @@ from functools import partial
 from flax.linen.initializers import zeros
 import jax.numpy as jnp
 from typing import Tuple
+from numpy import array
 
 # Shortcut for scan to run flax model
 scan = partial(
@@ -45,5 +46,10 @@ class GenericEchoState(nn.Module):
         # Scan; first output gets carried, second gets saved
         return updated_state, updated_state
 
-    def initialize_state(self, rng, n_reservoir, init_fn=zeros):
-        return self.reservoir_type.initialize_state(rng, n_reservoir, init_fn)
+    @staticmethod
+    def initialize_state(rng, n_reservoir, init_fn=zeros, parallel_reservoirs: int = 0):
+        if parallel_reservoirs > 0:
+            shape = (parallel_reservoirs, 1, n_reservoir)
+        else:
+            shape = (1, n_reservoir)
+        return init_fn(rng, shape)
